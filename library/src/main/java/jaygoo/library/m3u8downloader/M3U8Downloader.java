@@ -7,6 +7,7 @@ import androidx.annotation.Nullable;
 import java.io.File;
 import java.util.List;
 
+import jaygoo.library.m3u8downloader.bean.CourseInfo;
 import jaygoo.library.m3u8downloader.bean.M3U8;
 import jaygoo.library.m3u8downloader.bean.M3U8Task;
 import jaygoo.library.m3u8downloader.bean.M3U8TaskState;
@@ -77,9 +78,9 @@ public class M3U8Downloader {
      *
      * @param url
      */
-    public void download(String url) {
+    public void download(String url, CourseInfo courseInfo) {
         if (TextUtils.isEmpty(url) || isQuicklyClick()) return;
-        M3U8Task task = new M3U8Task(url);
+        M3U8Task task = new M3U8Task(url, courseInfo);
         if (downLoadQueue.contains(task)) {
             task = downLoadQueue.getTask(url);
             if (task.getState() == M3U8TaskState.PAUSE || task.getState() == M3U8TaskState.ERROR) {

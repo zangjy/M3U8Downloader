@@ -17,11 +17,21 @@ public class M3U8Task {
     private float progress;
     private M3U8 m3U8;
 
+    /**
+     * 课程信息
+     */
+    private CourseInfo courseInfo;
+
     private M3U8Task() {
     }
 
     public M3U8Task(String url) {
         this.url = url;
+    }
+
+    public M3U8Task(String url, CourseInfo courseInfo) {
+        this.url = url;
+        this.courseInfo = courseInfo;
     }
 
     @Override
@@ -81,5 +91,13 @@ public class M3U8Task {
 
     public void setM3U8(M3U8 m3U8) {
         this.m3U8 = m3U8;
+    }
+
+    public CourseInfo getCourseInfo() {
+        return courseInfo;
+    }
+
+    public void setCourseInfo(CourseInfo courseInfo) {
+        this.courseInfo = courseInfo;
     }
 }
