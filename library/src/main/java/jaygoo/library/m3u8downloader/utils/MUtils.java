@@ -3,9 +3,11 @@ package jaygoo.library.m3u8downloader.utils;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.net.URL;
 import java.util.Locale;
 import java.util.UUID;
@@ -62,7 +64,7 @@ public class MUtils {
                             dir.mkdirs();
                         }
                         //保存key文件
-                        writeFileFromString(keySb.toString(), rootPath, keyFileName);
+                        writeFileFromString(keySb.toString(), rootPath, keyFileName, "GBK");
                         //替换key路径
                         line = Pattern.compile("URI=\"(.*?)\"").matcher(line).replaceAll("URI=\"" + "/" + keyFileName + "\"");
                         keyReader.close();
@@ -181,15 +183,16 @@ public class MUtils {
     /**
      * 保存文件
      *
-     * @param data     要保存的数据
-     * @param rootPath 根目录
-     * @param fileName 文件名
+     * @param data        要保存的数据
+     * @param rootPath    根目录
+     * @param fileName    文件名
+     * @param charsetName 编码名称
      */
-    public static void writeFileFromString(String data, String rootPath, String fileName) {
+    public static void writeFileFromString(String data, String rootPath, String fileName, String charsetName) {
         File file = new File(rootPath, fileName);
         BufferedWriter bw = null;
         try {
-            bw = new BufferedWriter(new FileWriter(file));
+            bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file), charsetName));
             bw.write(data);
         } catch (IOException e) {
             e.printStackTrace();
