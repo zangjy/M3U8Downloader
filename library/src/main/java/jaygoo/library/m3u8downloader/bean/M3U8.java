@@ -86,14 +86,14 @@ public class M3U8 {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        sb.append("basePath: " + basePath);
-        sb.append("\nm3u8FilePath: " + m3u8FilePath);
-        sb.append("\ndirFilePath: " + dirFilePath);
-        sb.append("\nfileSize: " + getFileSize());
-        sb.append("\nfileFormatSize: " + MUtils.formatFileSize(fileSize));
-        sb.append("\ntotalTime: " + totalTime);
+        sb.append("basePath: ").append(basePath);
+        sb.append("\nm3u8FilePath: ").append(m3u8FilePath);
+        sb.append("\ndirFilePath: ").append(dirFilePath);
+        sb.append("\nfileSize: ").append(getFileSize());
+        sb.append("\nfileFormatSize: ").append(MUtils.formatFileSize(fileSize));
+        sb.append("\ntotalTime: ").append(totalTime);
         for (M3U8Ts ts : tsList) {
-            sb.append("\nts: " + ts);
+            sb.append("\nts: ").append(ts);
         }
         return sb.toString();
     }
@@ -102,7 +102,7 @@ public class M3U8 {
     public boolean equals(Object obj) {
         if (obj instanceof M3U8) {
             M3U8 m3U8 = (M3U8) obj;
-            if (basePath != null && basePath.equals(m3U8.basePath)) return true;
+            return basePath != null && basePath.equals(m3U8.basePath);
         }
         return false;
     }

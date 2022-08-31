@@ -33,18 +33,20 @@ public class M3U8InfoManger {
     /**
      * 获取m3u8信息
      *
-     * @param url
+     * @param savePath           如果是加密的，则将key保存的位置
+     * @param url                m3u8链接
      * @param onM3U8InfoListener
      */
-    public synchronized void getM3U8Info(final String url, OnM3U8InfoListener onM3U8InfoListener) {
+    public synchronized void getM3U8Info(final String savePath, final String url, OnM3U8InfoListener onM3U8InfoListener) {
         this.onM3U8InfoListener = onM3U8InfoListener;
         onM3U8InfoListener.onStart();
         new Thread() {
             @Override
             public void run() {
                 try {
+                    String headContent = MUtils.parseHeadContent(savePath, url);
                     M3U8 m3u8 = MUtils.parseIndex(url);
-                    handlerSuccess(m3u8);
+                    handlerSuccess(m3u8, headContent);
                 } catch (IOException e) {
                     handlerError(e);
                 }
@@ -66,7 +68,7 @@ public class M3U8InfoManger {
      *
      * @param m3u8
      */
-    private void handlerSuccess(M3U8 m3u8) {
-        onM3U8InfoListener.onSuccess(m3u8);
+    private void handlerSuccess(M3U8 m3u8, String m3u8FileStr) {
+        onM3U8InfoListener.onSuccess(m3u8, m3u8FileStr);
     }
 }

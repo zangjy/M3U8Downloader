@@ -189,14 +189,6 @@ public class M3U8Downloader {
         this.onM3U8DownloadListener = onM3U8DownloadListener;
     }
 
-    public void setEncryptKey(String encryptKey) {
-        m3U8DownLoadTask.setEncryptKey(encryptKey);
-    }
-
-    public String getEncryptKey() {
-        return m3U8DownLoadTask.getEncryptKey();
-    }
-
     private void startDownloadTask(M3U8Task task) {
         if (task == null) return;
         pendingTask(task);

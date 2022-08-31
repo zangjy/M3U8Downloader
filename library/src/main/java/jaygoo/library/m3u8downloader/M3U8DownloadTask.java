@@ -35,9 +35,7 @@ class M3U8DownloadTask {
     private static final int WHAT_ON_SUCCESS = 1003;
     private static final int WHAT_ON_START_DOWNLOAD = 1004;
     private OnTaskDownloadListener onTaskDownloadListener;
-    //加密Key，默认为空，不加密
-    private String encryptKey = null;
-    private String m3u8FileName = "local.m3u8";
+    private final String m3u8FileName = "local.m3u8";
     //文件保存的路径
     private String saveDir;
     //当前下载完成的文件个数
@@ -123,14 +121,6 @@ class M3U8DownloadTask {
         }
     }
 
-    public void setEncryptKey(String encryptKey) {
-        this.encryptKey = encryptKey;
-    }
-
-    public String getEncryptKey() {
-        return encryptKey;
-    }
-
     /**
      * 获取任务是否正在执行
      *
@@ -146,9 +136,9 @@ class M3U8DownloadTask {
      * @param url
      */
     private void getM3U8Info(String url) {
-        M3U8InfoManger.getInstance().getM3U8Info(url, new OnM3U8InfoListener() {
+        M3U8InfoManger.getInstance().getM3U8Info(saveDir, url, new OnM3U8InfoListener() {
             @Override
-            public void onSuccess(final M3U8 m3U8) {
+            public void onSuccess(final M3U8 m3U8, final String headContent) {
                 currentM3U8 = m3U8;
                 new Thread() {
                     @Override
@@ -163,7 +153,7 @@ class M3U8DownloadTask {
                                 Thread.sleep(100);
                             }
                             if (isRunning) {
-                                File m3u8File = MUtils.createLocalM3U8(new File(saveDir), m3u8FileName, currentM3U8);
+                                File m3u8File = MUtils.createLocalM3U8(new File(saveDir), m3u8FileName, currentM3U8, headContent);
                                 currentM3U8.setM3u8FilePath(m3u8File.getPath());
                                 currentM3U8.setDirFilePath(saveDir);
                                 currentM3U8.getFileSize();
@@ -246,7 +236,7 @@ class M3U8DownloadTask {
                 public void run() {
                     File file;
                     try {
-                        String fileName = M3U8EncryptHelper.encryptFileName(encryptKey, m3U8Ts.obtainEncodeTsFileName());
+                        String fileName = m3U8Ts.obtainEncodeTsFileName();
                         file = new File(dir + File.separator + fileName);
                     } catch (Exception e) {
                         file = new File(dir + File.separator + m3U8Ts.getUrl());
@@ -285,13 +275,13 @@ class M3U8DownloadTask {
                             if (inputStream != null) {
                                 try {
                                     inputStream.close();
-                                } catch (IOException e) {
+                                } catch (IOException ignored) {
                                 }
                             }
                             if (fos != null) {
                                 try {
                                     fos.close();
-                                } catch (IOException e) {
+                                } catch (IOException ignored) {
                                 }
                             }
                         }

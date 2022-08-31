@@ -9,6 +9,10 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
+import java.util.Locale;
+import java.util.UUID;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import jaygoo.library.m3u8downloader.M3U8DownloaderConfig;
 import jaygoo.library.m3u8downloader.bean.M3U8;
@@ -24,6 +28,52 @@ import jaygoo.library.m3u8downloader.bean.M3U8Ts;
  */
 
 public class MUtils {
+
+    /**
+     * 读取M3U8文件头内容(如果需要下载key，则会下载key文件并替换掉原有的网络路径)
+     *
+     * @param rootPath 和local.m3u8同级
+     * @param url      m3u8的地址
+     * @return
+     * @throws IOException
+     */
+    public static String parseHeadContent(String rootPath, String url) throws IOException {
+        BufferedReader reader = new BufferedReader(new InputStreamReader(new URL(url).openStream()));
+        StringBuilder sb = new StringBuilder();
+        String line;
+        while ((line = reader.readLine()) != null) {
+            if (line.startsWith("#")) {
+                if (line.startsWith("#EXTINF:")) {
+                    break;
+                } else if (line.startsWith("#EXT-X-KEY")) {
+                    Matcher urlMatcher = Pattern.compile("URI=\"(.*?)\"").matcher(line);
+                    if (urlMatcher.find() && (urlMatcher.group(1).toLowerCase().startsWith("http://") || urlMatcher.group(1).toLowerCase().startsWith("https://"))) {
+                        String keyFileName = genUUID() + ".key";
+                        BufferedReader keyReader = new BufferedReader(new InputStreamReader(new URL(urlMatcher.group(1)).openStream()));
+                        StringBuilder keySb = new StringBuilder();
+                        String keyLine;
+                        while ((keyLine = keyReader.readLine()) != null) {
+                            keySb.append(keyLine);
+                        }
+                        //没有就创建
+                        File dir = new File(rootPath);
+                        if (!dir.exists()) {
+                            dir.mkdirs();
+                        }
+                        //保存key文件
+                        saveFile(keySb.toString().getBytes(), rootPath + File.separator + keyFileName);
+                        //替换key路径
+                        line = Pattern.compile("URI=\"(.*?)\"").matcher(line).replaceAll("URI=\"" + keyFileName + "\"");
+                        keyReader.close();
+                    }
+                }
+            }
+            sb.append(line);
+        }
+        reader.close();
+        return sb.toString();
+    }
+
     /**
      * 将Url转换为M3U8对象
      *
@@ -68,8 +118,8 @@ public class MUtils {
                 return dir.delete();// 删除文件
             } else if (dir.isDirectory()) {// 否则如果它是一个目录
                 File[] files = dir.listFiles();// 声明目录下所有的文件 files[];
-                for (int i = 0; i < files.length; i++) {// 遍历目录下所有的文件
-                    clearDir(files[i]);// 把每个文件用这个方法进行迭代
+                for (File file : files) {// 遍历目录下所有的文件
+                    clearDir(file);// 把每个文件用这个方法进行迭代
                 }
                 return dir.delete();// 删除文件夹
             }
@@ -78,16 +128,16 @@ public class MUtils {
     }
 
 
-    private static float KB = 1024;
-    private static float MB = 1024 * KB;
-    private static float GB = 1024 * MB;
+    private static final float KB = 1024;
+    private static final float MB = 1024 * KB;
+    private static final float GB = 1024 * MB;
 
     /**
      * 格式化文件大小
      */
     public static String formatFileSize(long size) {
         if (size >= GB) {
-            return String.format("%.1f GB", size / GB);
+            return String.format(Locale.getDefault(), "%.1f GB", size / GB);
         } else if (size >= MB) {
             float value = size / MB;
             return String.format(value > 100 ? "%.0f MB" : "%.1f MB", value);
@@ -95,7 +145,7 @@ public class MUtils {
             float value = size / KB;
             return String.format(value > 100 ? "%.0f KB" : "%.1f KB", value);
         } else {
-            return String.format("%d B", size);
+            return String.format(Locale.getDefault(), "%d B", size);
         }
     }
 
@@ -103,27 +153,17 @@ public class MUtils {
      * 生成本地m3u8索引文件，ts切片和m3u8文件放在相同目录下即可
      *
      * @param m3u8Dir
-     * @param m3U8
+     * @param fileName    文件名称
+     * @param m3U8        切片信息
+     * @param headContent 头部信息
+     * @return
+     * @throws IOException
      */
-    public static File createLocalM3U8(File m3u8Dir, String fileName, M3U8 m3U8) throws IOException {
-        return createLocalM3U8(m3u8Dir, fileName, m3U8, null);
-    }
-
-    /**
-     * 生成AES-128加密本地m3u8索引文件，ts切片和m3u8文件放在相同目录下即可
-     *
-     * @param m3u8Dir
-     * @param m3U8
-     */
-    public static File createLocalM3U8(File m3u8Dir, String fileName, M3U8 m3U8, String keyPath) throws IOException {
+    public static File createLocalM3U8(File m3u8Dir, String fileName, M3U8 m3U8, String headContent) throws IOException {
         File m3u8File = new File(m3u8Dir, fileName);
         BufferedWriter bfw = new BufferedWriter(new FileWriter(m3u8File, false));
-        bfw.write("#EXTM3U\n");
-        bfw.write("#EXT-X-VERSION:3\n");
-        bfw.write("#EXT-X-MEDIA-SEQUENCE:0\n");
-        bfw.write("#EXT-X-TARGETDURATION:13\n");
+        bfw.write(headContent + "\n");
         for (M3U8Ts m3U8Ts : m3U8.getTsList()) {
-            if (keyPath != null) bfw.write("#EXT-X-KEY:METHOD=AES-128,URI=\"" + keyPath + "\"\n");
             bfw.write("#EXTINF:" + m3U8Ts.getSeconds() + ",\n");
             bfw.write(m3U8Ts.obtainEncodeTsFileName());
             bfw.newLine();
@@ -134,6 +174,13 @@ public class MUtils {
         return m3u8File;
     }
 
+    /**
+     * 读取文件
+     *
+     * @param fileName
+     * @return
+     * @throws IOException
+     */
     public static byte[] readFile(String fileName) throws IOException {
         File file = new File(fileName);
         FileInputStream fis = new FileInputStream(file);
@@ -144,6 +191,13 @@ public class MUtils {
         return buffer;
     }
 
+    /**
+     * 保存文件
+     *
+     * @param bytes
+     * @param fileName
+     * @throws IOException
+     */
     public static void saveFile(byte[] bytes, String fileName) throws IOException {
         File file = new File(fileName);
         FileOutputStream outputStream = new FileOutputStream(file);
@@ -154,5 +208,9 @@ public class MUtils {
 
     public static String getSaveFileDir(String url) {
         return M3U8DownloaderConfig.getSaveDir() + File.separator + MD5Utils.encode(url);
+    }
+
+    public static String genUUID() {
+        return UUID.randomUUID().toString().replaceAll("-", "");
     }
 }

@@ -21,7 +21,7 @@ public interface OnM3U8InfoListener extends BaseListener {
      * 获取成功的时候回调
      * 异步回调，不可以直接在UI线程调用
      */
-    void onSuccess(M3U8 m3U8);
+    void onSuccess(M3U8 m3U8, String headContent);
 
     /**
      * 错误的时候回调
