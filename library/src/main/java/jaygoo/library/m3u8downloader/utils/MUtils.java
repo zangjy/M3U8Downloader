@@ -3,8 +3,6 @@ package jaygoo.library.m3u8downloader.utils;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -64,7 +62,7 @@ public class MUtils {
                             dir.mkdirs();
                         }
                         //保存key文件
-                        saveFile(keySb.toString().getBytes(), rootPath, keyFileName);
+                        writeFileFromString(keySb.toString(), rootPath, keyFileName);
                         //替换key路径
                         line = Pattern.compile("URI=\"(.*?)\"").matcher(line).replaceAll("URI=\"" + "/" + keyFileName + "\"");
                         keyReader.close();
@@ -181,35 +179,29 @@ public class MUtils {
     }
 
     /**
-     * 读取文件
-     *
-     * @param fileName
-     * @return
-     * @throws IOException
-     */
-    public static byte[] readFile(String fileName) throws IOException {
-        File file = new File(fileName);
-        FileInputStream fis = new FileInputStream(file);
-        int length = fis.available();
-        byte[] buffer = new byte[length];
-        fis.read(buffer);
-        fis.close();
-        return buffer;
-    }
-
-    /**
      * 保存文件
      *
-     * @param bytes
-     * @param fileName
-     * @throws IOException
+     * @param data     要保存的数据
+     * @param rootPath 根目录
+     * @param fileName 文件名
      */
-    public static void saveFile(byte[] bytes, String rootPath, String fileName) throws IOException {
+    public static void writeFileFromString(String data, String rootPath, String fileName) {
         File file = new File(rootPath, fileName);
-        FileOutputStream outputStream = new FileOutputStream(file);
-        outputStream.write(bytes);
-        outputStream.flush();
-        outputStream.close();
+        BufferedWriter bw = null;
+        try {
+            bw = new BufferedWriter(new FileWriter(file));
+            bw.write(data);
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                if (bw != null) {
+                    bw.close();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     public static String getSaveFileDir(String url) {
