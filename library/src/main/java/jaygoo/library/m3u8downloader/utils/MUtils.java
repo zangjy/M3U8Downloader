@@ -61,17 +61,20 @@ public class MUtils {
                             dir.mkdirs();
                         }
                         //保存key文件
-                        saveFile(keySb.toString().getBytes(), rootPath + File.separator + keyFileName);
+                        saveFile(keySb.toString().getBytes(), rootPath, keyFileName);
                         //替换key路径
                         line = Pattern.compile("URI=\"(.*?)\"").matcher(line).replaceAll("URI=\"" + keyFileName + "\"");
                         keyReader.close();
                     }
                 }
             }
+            if (sb.toString().length() > 0) {
+                sb.append("\n");
+            }
             sb.append(line);
         }
         reader.close();
-        return sb.toString();
+        return sb.toString().trim();
     }
 
     /**
@@ -198,8 +201,8 @@ public class MUtils {
      * @param fileName
      * @throws IOException
      */
-    public static void saveFile(byte[] bytes, String fileName) throws IOException {
-        File file = new File(fileName);
+    public static void saveFile(byte[] bytes, String rootPath, String fileName) throws IOException {
+        File file = new File(rootPath, fileName);
         FileOutputStream outputStream = new FileOutputStream(file);
         outputStream.write(bytes);
         outputStream.flush();
