@@ -63,7 +63,7 @@ public class MUtils {
                         //保存key文件
                         saveFile(keySb.toString().getBytes(), rootPath, keyFileName);
                         //替换key路径
-                        line = Pattern.compile("URI=\"(.*?)\"").matcher(line).replaceAll("URI=\"" + keyFileName + "\"");
+                        line = Pattern.compile("URI=\"(.*?)\"").matcher(line).replaceAll("URI=\"" + "/" + keyFileName + "\"");
                         keyReader.close();
                     }
                 }
@@ -168,7 +168,7 @@ public class MUtils {
         bfw.write(headContent + "\n");
         for (M3U8Ts m3U8Ts : m3U8.getTsList()) {
             bfw.write("#EXTINF:" + m3U8Ts.getSeconds() + ",\n");
-            bfw.write(m3U8Ts.obtainEncodeTsFileName());
+            bfw.write("/" + m3U8Ts.obtainEncodeTsFileName());
             bfw.newLine();
         }
         bfw.write("#EXT-X-ENDLIST");
