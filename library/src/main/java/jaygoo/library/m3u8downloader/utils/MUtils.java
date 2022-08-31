@@ -2,12 +2,13 @@ package jaygoo.library.m3u8downloader.utils;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
 import java.net.URL;
 import java.util.Locale;
 import java.util.UUID;
@@ -48,26 +49,28 @@ public class MUtils {
                 } else if (line.startsWith("#EXT-X-KEY")) {
                     Matcher urlMatcher = Pattern.compile("URI=\"(.*?)\"").matcher(line);
                     if (urlMatcher.find() && (urlMatcher.group(1).toLowerCase().startsWith("http://") || urlMatcher.group(1).toLowerCase().startsWith("https://"))) {
-                        String keyFileName = genUUID() + ".key";
-                        BufferedReader keyReader = new BufferedReader(new InputStreamReader(new URL(urlMatcher.group(1)).openStream()));
-                        StringBuilder keySb = new StringBuilder();
-                        String keyLine;
-                        while ((keyLine = keyReader.readLine()) != null) {
-                            if (keySb.toString().length() > 0) {
-                                keySb.append("\n");
-                            }
-                            keySb.append(keyLine);
-                        }
-                        //没有就创建
+                        //没有就创建目录
                         File dir = new File(rootPath);
                         if (!dir.exists()) {
                             dir.mkdirs();
                         }
-                        //保存key文件
-                        writeFileFromString(keySb.toString(), rootPath, keyFileName, "GBK");
+                        //key的文件名
+                        String keyFileName = genUUID() + ".key";
                         //替换key路径
                         line = Pattern.compile("URI=\"(.*?)\"").matcher(line).replaceAll("URI=\"" + "/" + keyFileName + "\"");
-                        keyReader.close();
+                        //下载Key文件
+                        InputStream is = new URL(urlMatcher.group(1)).openStream();
+                        DataInputStream dis = new DataInputStream(is);
+                        FileOutputStream fos = new FileOutputStream(new File(dir, keyFileName));
+                        int length;
+                        byte[] buffer = new byte[1024];
+                        //开始填充数据
+                        while ((length = dis.read(buffer)) > 0) {
+                            fos.write(buffer, 0, length);
+                        }
+                        is.close();
+                        dis.close();
+                        fos.close();
                     }
                 }
             }
@@ -178,33 +181,6 @@ public class MUtils {
         bfw.flush();
         bfw.close();
         return m3u8File;
-    }
-
-    /**
-     * 保存文件
-     *
-     * @param data        要保存的数据
-     * @param rootPath    根目录
-     * @param fileName    文件名
-     * @param charsetName 编码名称
-     */
-    public static void writeFileFromString(String data, String rootPath, String fileName, String charsetName) {
-        File file = new File(rootPath, fileName);
-        BufferedWriter bw = null;
-        try {
-            bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file), charsetName));
-            bw.write(data);
-        } catch (IOException e) {
-            e.printStackTrace();
-        } finally {
-            try {
-                if (bw != null) {
-                    bw.close();
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
     }
 
     public static String getSaveFileDir(String url) {
