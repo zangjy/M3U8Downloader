@@ -53,6 +53,9 @@ public class MUtils {
                         StringBuilder keySb = new StringBuilder();
                         String keyLine;
                         while ((keyLine = keyReader.readLine()) != null) {
+                            if (keySb.toString().length() > 0) {
+                                keySb.append("\n");
+                            }
                             keySb.append(keyLine);
                         }
                         //没有就创建
